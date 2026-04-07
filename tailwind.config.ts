@@ -9,11 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        flash: {
-          cyan: "#00D2FF",    // لون البرق الأزرق من شعارك
-          silver: "#A8B2BD",  // لون الفضة المعدني
-          dark: "#0B0E14",    // لون الخلفية الداكنة في الصورة
-        }
+       flash: {
+    cyan: "#00D2FF",    // لون البرق
+    electric: "#0033FF", // الأزرق البرقي العميق
+    dark: "#87a5d1",    // أسود شبه كلي لزيادة التباين
+    silver: "#A8B2BD",
+  }
       },
       keyframes: {
         'fade-up': {
