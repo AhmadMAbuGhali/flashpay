@@ -1,96 +1,288 @@
 "use client";
+
+import Link from "next/link";
 import Image from "next/image";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import useTranslations from "@/hooks/useTranslations";
+import { useEffect, useState } from "react";
+
+interface Country {
+  id: string;
+  name: string;
+  currency: string;
+}
+
+interface CurrencyOption {
+  code: string;
+  name: string;
+}
+
+interface Account {
+  id: string;
+  accountText: string;
+  country: string;
+  currency: string;
+  isActive: boolean;
+  isVip: boolean;
+  createdAt: string;
+}
 
 export default function HomePage() {
+  const t = useTranslations();
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPublicAccounts = async () => {
+      try {
+        const [accountsResponse, countriesResponse, currenciesResponse] = await Promise.all([
+          fetch("/api/accounts"),
+          fetch("/api/countries"),
+          fetch("/api/currencies"),
+        ]);
+
+        if (accountsResponse.ok) {
+          const accountsData = await accountsResponse.json();
+          setAccounts(accountsData.filter((acc: Account) => !acc.isVip && acc.isActive));
+        }
+
+        if (countriesResponse.ok) {
+          const countriesData = await countriesResponse.json();
+          setCountries(countriesData);
+        }
+
+        if (currenciesResponse.ok) {
+          const currenciesData = await currenciesResponse.json();
+          setCurrencies(currenciesData.currencies || []);
+        }
+      } catch (error) {
+        console.error("Error fetching public data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPublicAccounts();
+  }, []);
+
+  const filteredAccounts = selectedCountry
+    ? accounts.filter(account => account.country === selectedCountry)
+    : accounts;
+
+  const publicAccountCountByCountry = accounts.reduce<Record<string, number>>((accumulator, account) => {
+    accumulator[account.country] = (accumulator[account.country] || 0) + 1;
+    return accumulator;
+  }, {});
+
+  const selectedCountryLabel = selectedCountry ? `Country: ${selectedCountry}` : "All public accounts";
+
   return (
-    <main className="relative min-h-screen bg-[#6a7eaa] flex flex-col items-center justify-center px-6 py-12 overflow-hidden">
-      
-      {/* تأثيرات الإضاءة الخلفية الطبقية */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-black/10 blur-[100px] rounded-full pointer-events-none" />
-
-      <div className="max-w-5xl w-full flex flex-col items-center relative z-10">
-        
-        {/* 1. الشعار بتصميم عائم */}
-        <div className="relative mb-10 animate-fade-up">
-          <div className="absolute inset-0 bg-white/20 blur-[50px] rounded-full" />
-          <div className="relative p-6 bg-white/5 backdrop-blur-xl border border-white/20 rounded-[4rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.3)] transition-transform duration-500 hover:scale-105">
-            <Image 
-              src="/logo.png" 
-              alt="Flash Pay Logo" 
-              width={220} 
-              height={220} 
-              className="rounded-[3rem] object-contain drop-shadow-2xl"
-              priority
-            />
+    <main className="relative min-h-screen overflow-hidden bg-[#08101E] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,210,255,0.16),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(106,126,170,0.18),_transparent_35%)]" />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
+        {/* Navbar */}
+        <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
+          <div className="flex items-center gap-4">
+            <Image src="/logo.png" alt="Flash Pay Logo" width={40} height={40} className="rounded-full" />
+            <span className="text-lg font-semibold text-white">Flash Pay</span>
           </div>
-        </div>
-
-        {/* 2. النصوص الرئيسية */}
-        <div className="text-center mb-12 space-y-4 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-5xl md:text-8xl font-black text-white leading-tight tracking-tighter drop-shadow-2xl">
-            قريباً <span className="text-[#00D2FF]">Flash Pay</span>
-          </h1>
-          <p className="text-xl md:text-3xl font-medium text-white/80 tracking-[0.2em] uppercase italic">
-            نظام الحوالات المالية الأسرع
-          </p>
-          <div className="h-1 w-24 bg-gradient-to-r from-transparent via-[#00D2FF] to-transparent mx-auto rounded-full shadow-[0_0_15px_#00D2FF]" />
-        </div>
-
-        {/* 3. إطار الفيديو السينمائي (تمت إزالة شريط الحالة منه) */}
-        <div className="w-full max-w-4xl aspect-video rounded-[3rem] overflow-hidden border-[12px] border-white/10 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.5)] bg-black/40 relative mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src="/hero-video.mp4" type="video/mp4" />
-          </video>
-          {/* تظليل سفلي خفيف لإعطاء جمالية للفيديو */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-        </div>
-
-        {/* 4. قسم التواصل الاجتماعي */}
-        <div className="w-full max-w-2xl bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[3rem] shadow-xl animate-fade-up text-center" style={{ animationDelay: '0.3s' }}>
-          <h2 className="text-white/90 text-lg md:text-xl font-bold mb-6 tracking-widest uppercase">
-            تواصل معنا حالياً عبر
-          </h2>
-          
-          <div className="flex flex-wrap justify-center gap-5">
-            {/* فيسبوك */}
-            <a href="https://www.facebook.com/share/18W65sncNE/" target="_blank" className="group flex flex-col items-center gap-2">
-              <div className="p-4 bg-white/10 rounded-2xl group-hover:bg-[#1877F2] group-hover:scale-110 transition-all duration-300">
-                <svg className="w-6 h-6 fill-white" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </div>
-              <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Facebook</span>
-            </a>
-
-            {/* واتساب */}
-            <a href="https://wa.me/447704837539" target="_blank" className="group flex flex-col items-center gap-2">
-              <div className="p-4 bg-white/10 rounded-2xl group-hover:bg-[#25D366] group-hover:scale-110 transition-all duration-300">
-                <svg className="w-6 h-6 fill-white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              </div>
-              <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">WhatsApp</span>
-            </a>
-
-            {/* تليجرام */}
-            <a href="https://t.me/+447704837539" target="_blank" className="group flex flex-col items-center gap-2">
-              <div className="p-4 bg-white/10 rounded-2xl group-hover:bg-[#0088cc] group-hover:scale-110 transition-all duration-300">
-                <svg className="w-6 h-6 fill-white" viewBox="0 0 24 24"><path d="M11.944 0C5.346 0 0 5.346 0 11.944s5.346 11.944 11.944 11.944 11.944-5.346 11.944-11.944S18.542 0 11.944 0zm5.206 8.358l-1.764 8.306c-.134.589-.483.732-.978.457l-2.69-1.983-1.297 1.25c-.144.144-.264.264-.534.264l.192-2.738 4.985-4.503c.217-.193-.047-.3-.332-.112l-6.16 3.882-2.652-.828c-.577-.181-.59-.577.121-.855l10.362-3.995c.48-.177.9.11.745.85z"/></svg>
-              </div>
-              <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Telegram</span>
-            </a>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <Link href="/login" className="rounded-full bg-[#00D2FF] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-[#00c6ff]">
+              Login
+            </Link>
           </div>
-        </div>
+        </nav>
 
+        {/* Country Filter Section */}
+        <section className="mb-12 rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Public Accounts</h2>
+              <p className="text-sm text-slate-400">Select a country to view public accounts for that region.</p>
+            </div>
+            {selectedCountry && (
+              <button
+                onClick={() => setSelectedCountry(null)}
+                className="rounded-full bg-[#00D2FF] px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-[#00c6ff]"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {countries.map((country) => (
+              <button
+                key={country.id}
+                type="button"
+                onClick={() => setSelectedCountry(country.name)}
+                className={`rounded-[1.5rem] border px-5 py-5 text-left transition ${
+                  selectedCountry === country.name
+                    ? "border-[#00D2FF] bg-[#00D2FF]/10"
+                    : "border-white/10 bg-slate-950/80 hover:border-[#00D2FF] hover:bg-white/5"
+                }`}
+              >
+                <p className="text-base font-semibold text-white">{country.name}</p>
+                <p className="mt-2 text-sm text-slate-400">Currency: {country.currency}</p>
+                <p className="mt-2 text-xs uppercase tracking-[0.25em] text-slate-500">
+                  {publicAccountCountByCountry[country.name] || 0} public accounts
+                </p>
+              </button>
+            ))}
+          </div>
+
+          <p className="mb-4 text-sm uppercase tracking-[0.35em] text-slate-400">{selectedCountryLabel}</p>
+
+          {loading ? (
+            <p className="text-slate-400">Loading...</p>
+          ) : filteredAccounts.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredAccounts.map((account) => (
+                <div key={account.id} className="rounded-[1rem] border border-white/10 bg-slate-950/80 p-4">
+                  <p className="text-lg font-semibold text-white">{account.accountText}</p>
+                  <p className="text-sm text-slate-400">{account.country} - {account.currency}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-400">No public accounts available for this country.</p>
+          )}
+        </section>
+
+        {/* Currency Converter Section */}
+          <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
+            <h2 className="mb-6 text-2xl font-semibold text-white">Currency Converter</h2>
+            <CurrencyConverter currencies={currencies} />
+          </section>
       </div>
-
-      {/* Footer */}
-      <footer className="mt-20 text-[9px] font-black uppercase tracking-[1em] text-white/20">
-        Flash Pay • Trusted Solutions • 2026
-      </footer>
     </main>
+  );
+}
+
+function CurrencyConverter({ currencies }: { currencies: CurrencyOption[] }) {
+  const [amount, setAmount] = useState(1);
+  const [fromCurrency, setFromCurrency] = useState("");
+  const [toCurrency, setToCurrency] = useState("");
+  const [result, setResult] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [rateError, setRateError] = useState<string | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+
+  const currencyOptions: CurrencyOption[] = currencies.length
+    ? currencies
+    : [
+        { code: "USD", name: "US Dollar" },
+        { code: "EUR", name: "Euro" },
+        { code: "GBP", name: "British Pound" },
+        { code: "JPY", name: "Japanese Yen" },
+      ];
+
+  useEffect(() => {
+    if (currencyOptions.length > 0) {
+      setFromCurrency(prev => prev || currencyOptions[0].code);
+      setToCurrency(prev => prev || (currencyOptions[1]?.code ?? currencyOptions[0].code));
+    }
+  }, [currencyOptions]);
+
+  const convert = async () => {
+    if (!fromCurrency || !toCurrency || amount <= 0) {
+      setRateError("Enter a valid amount and select both currencies.");
+      setResult(null);
+      return;
+    }
+
+    setLoading(true);
+    setRateError(null);
+    try {
+      const response = await fetch(
+        `/api/exchange-rates?base=${encodeURIComponent(fromCurrency)}&symbols=${encodeURIComponent(toCurrency)}`
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data?.rates?.[toCurrency]) {
+        throw new Error(data?.error || "Conversion failed");
+      }
+
+      setResult(amount * data.rates[toCurrency]);
+      setUpdatedAt(data.updatedAt || null);
+    } catch (error) {
+      console.error("Conversion error:", error);
+      setRateError(error instanceof Error ? error.message : "Conversion failed");
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+          placeholder="Amount"
+        />
+        <select
+          value={fromCurrency}
+          onChange={(e) => setFromCurrency(e.target.value)}
+          className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+        >
+          {currencyOptions.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.name} ({option.code})
+            </option>
+          ))}
+        </select>
+        <select
+          value={toCurrency}
+          onChange={(e) => setToCurrency(e.target.value)}
+          className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+        >
+          {currencyOptions.map((option) => (
+            <option key={`${option.code}-to`} value={option.code}>
+              {option.name} ({option.code})
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={convert}
+          disabled={loading}
+          className="rounded-3xl bg-[#00D2FF] px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-[#00D2FF]/90 disabled:opacity-50"
+        >
+          {loading ? "Converting..." : "Convert"}
+        </button>
+        <button
+          onClick={() => {
+            setFromCurrency(toCurrency);
+            setToCurrency(fromCurrency);
+            setResult(null);
+          }}
+          type="button"
+          className="rounded-3xl border border-white/10 bg-slate-950/80 px-6 py-3 text-sm font-semibold text-white transition hover:border-[#00D2FF]/60"
+        >
+          Swap currencies
+        </button>
+        <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+          Live rates across the top 100 currencies
+        </p>
+      </div>
+      {rateError && <p className="text-sm text-rose-300">{rateError}</p>}
+      {result !== null && (
+        <div className="space-y-2 rounded-[1.5rem] border border-white/10 bg-slate-950/60 p-4">
+          <p className="text-lg text-white">
+            {amount} {fromCurrency} = {result.toFixed(2)} {toCurrency}
+          </p>
+          {updatedAt && <p className="text-sm text-slate-400">Updated: {updatedAt}</p>}
+        </div>
+      )}
+    </div>
   );
 }

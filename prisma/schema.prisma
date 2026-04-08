@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  OFFICE_MANAGER
+  PUBLIC_USER
+}
+
+enum AccountType {
+  PRIVATE
+  SHARED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        UserRole @default(OFFICE_MANAGER)
+  office      Office?  @relation(fields: [officeId], references: [id])
+  officeId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Office {
+  id           String   @id @default(uuid())
+  name         String
+  region       String
+  email        String   @unique
+  phone        String
+  address      String?
+  isActive     Boolean  @default(true)
+  users        User[]
+  accounts     Account[]
+  agents       Agent[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Agent {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String
+  region      String
+  email       String   @unique
+  office      Office   @relation(fields: [officeId], references: [id])
+  officeId    String
+  account     Account? @relation(fields: [accountId], references: [id])
+  accountId   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Account {
+  id              String      @id @default(uuid())
+  bankName        String
+  accountNumber   String
+  iban            String?
+  currency        String      @default("USD")
+  type            AccountType @default(PRIVATE)
+  branch          String?
+  swiftCode       String?
+  ownerName       String
+  office          Office      @relation(fields: [officeId], references: [id])
+  officeId        String
+  agent           Agent?      @relation()
+  isActive        Boolean     @default(true)
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
