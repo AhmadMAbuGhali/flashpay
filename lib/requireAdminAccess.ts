@@ -27,21 +27,21 @@ export async function requireAdminAccess(request: NextRequest) {
     return NextResponse.json({ error: "Invalid session" }, { status: 401 });
   }
 
-  const { data: officeByUserId } = await supabase
-    .from("offices")
+  const { data: vipByUserId } = await supabase
+    .from("vip_users")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { data: officeByEmail } = user.email
+  const { data: vipByEmail } = user.email
     ? await supabase
-        .from("offices")
+        .from("vip_users")
         .select("id")
         .eq("email", user.email)
         .maybeSingle()
     : { data: null };
 
-  if (officeByUserId || officeByEmail) {
+  if (vipByUserId || vipByEmail) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 

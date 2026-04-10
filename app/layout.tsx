@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 // إعدادات الميتا داتا (العنوان والوصف وأيقونة التبويب)
 export const metadata: Metadata = {
   title: "Flash Pay | حوالات مالية بلمح البصر",
-  description: "أسرع وأكثر نظام حوالات مالية أماناً في العالم - انتظروا الإطلاق قريباً",
+  description: "دليل حسابات دولي آمن ولوحة إدارة VIP لمنصة Flash Pay.",
   // هنا نربط شعارك بالتبويب
   icons: {
     icon: "/logo.png",

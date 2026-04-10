@@ -6,6 +6,7 @@ import RequireAuth from "@/components/auth/RequireAuth";
 import useDashboardRole from "@/hooks/useDashboardRole";
 import useTranslations from "@/hooks/useTranslations";
 import { supabase } from "@/lib/supabaseClient";
+import { Pencil, Trash2, UserPlus, Users } from "lucide-react";
 
 interface VipPerson {
   id: string;
@@ -70,7 +71,7 @@ export default function DashboardVipsPage() {
   const fetchPeople = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/offices");
+      const response = await fetch("/api/vips");
 
       if (!response.ok) {
         throw new Error(t.vips.fetchFailed);
@@ -103,7 +104,7 @@ export default function DashboardVipsPage() {
 
     try {
       const headers = await getAuthHeaders();
-      const url = editingId ? `/api/offices/${editingId}` : "/api/offices";
+      const url = editingId ? `/api/vips/${editingId}` : "/api/vips";
       const method = editingId ? "PUT" : "POST";
       const payload = editingId
         ? {
@@ -154,7 +155,7 @@ export default function DashboardVipsPage() {
 
     try {
       const headers = await getAuthHeaders();
-      const response = await fetch(`/api/offices/${id}`, {
+      const response = await fetch(`/api/vips/${id}`, {
         method: "DELETE",
         headers,
       });
@@ -182,9 +183,24 @@ export default function DashboardVipsPage() {
   return (
     <RequireAuth>
       <div className="space-y-6">
+        {/* VIP management uses a form-first layout and responsive list fallback instead of desktop-only tables. */}
         <div className="rounded-[2rem] border border-white/10 bg-[#0e1728]/80 p-6 text-slate-200 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
           <h2 className="text-3xl font-semibold text-white">{t.vips.title}</h2>
           <p className="mt-3 text-sm text-slate-400">{t.vips.description}</p>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="dashboard-stat">
+              <p className="text-slate-400">Total VIP users</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{people.length}</p>
+            </div>
+            <div className="dashboard-stat">
+              <p className="text-slate-400">Active</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{people.filter(person => person.isActive).length}</p>
+            </div>
+            <div className="dashboard-stat">
+              <p className="text-slate-400">Inactive</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{people.filter(person => !person.isActive).length}</p>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
@@ -193,7 +209,7 @@ export default function DashboardVipsPage() {
               value={form.name}
               onChange={event => setForm(prev => ({ ...prev, name: event.target.value }))}
               placeholder={t.vips.fullNamePlaceholder}
-              className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+              className="field-input"
               required
             />
             <input
@@ -201,14 +217,14 @@ export default function DashboardVipsPage() {
               value={form.email}
               onChange={event => setForm(prev => ({ ...prev, email: event.target.value }))}
               placeholder={t.vips.emailPlaceholder}
-              className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+              className="field-input"
               required
             />
             <input
               value={form.phone}
               onChange={event => setForm(prev => ({ ...prev, phone: event.target.value }))}
               placeholder={t.vips.phonePlaceholder}
-              className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+              className="field-input"
               required
             />
             <input
@@ -216,7 +232,7 @@ export default function DashboardVipsPage() {
               value={form.password}
               onChange={event => setForm(prev => ({ ...prev, password: event.target.value }))}
               placeholder={editingId ? t.vips.newPasswordPlaceholder : t.vips.passwordPlaceholder}
-              className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
+              className="field-input"
               required={!editingId}
             />
             <label className="inline-flex items-center gap-3 text-sm text-slate-300 md:col-span-2">
@@ -233,15 +249,16 @@ export default function DashboardVipsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-3xl bg-[#00D2FF] px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-[#00D2FF]/90 disabled:opacity-50"
+                className="primary-button"
               >
+                {editingId ? <Pencil className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
                 {saving ? t.common.loading : editingId ? t.vips.updatePerson : t.vips.addPerson}
               </button>
               {editingId && (
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-3xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="secondary-button"
                 >
                   {t.common.cancel}
                 </button>
@@ -250,7 +267,42 @@ export default function DashboardVipsPage() {
           </form>
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
+        {people.length === 0 && (
+          <div className="empty-state">
+            <Users className="mx-auto h-10 w-10 text-[#00D2FF]" />
+            <h3 className="mt-4 text-xl font-semibold text-white">No VIP users yet</h3>
+            <p className="mt-2 text-sm text-slate-400">Create the first VIP login to give read access to the private dashboard.</p>
+          </div>
+        )}
+
+        <div className="grid gap-4 md:hidden">
+          {people.map(person => (
+            <div key={`mobile-${person.id}`} className="glass-panel-strong p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-white">{person.name}</p>
+                  <p className="mt-1 text-sm text-slate-400">{person.email}</p>
+                  <p className="mt-1 text-sm text-slate-400">{person.phone}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${person.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}`}>
+                  {person.isActive ? t.common.active : t.common.inactive}
+                </span>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => handleEdit(person)} className="secondary-button flex-1 text-sm">
+                  <Pencil className="h-4 w-4" />
+                  {t.common.edit}
+                </button>
+                <button onClick={() => handleDelete(person.id)} className="danger-button flex-1 text-sm">
+                  <Trash2 className="h-4 w-4" />
+                  {t.common.delete}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-xl shadow-slate-950/10 backdrop-blur-xl md:block">
           <table className="min-w-full border-collapse text-left text-sm text-slate-200">
             <thead className="bg-slate-950/80 text-slate-400">
               <tr>

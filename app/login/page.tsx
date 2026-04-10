@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Lock, Mail, Key, ShieldCheck, Building2 } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck, Building2 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import useTranslations from "@/hooks/useTranslations";
@@ -81,19 +81,27 @@ export default function LoginPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_40px_80px_-50px_rgba(0,0,0,0.7)]">
+                <div className="dashboard-stat">
                   <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{t.login.superAdmin}</p>
                   <p className="mt-3 text-2xl font-semibold text-white">{t.login.superAdminDetail}</p>
                 </div>
-                <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_40px_80px_-50px_rgba(0,0,0,0.7)]">
+                <div className="dashboard-stat">
                   <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{t.login.officeAccess}</p>
                   <p className="mt-3 text-2xl font-semibold text-white">{t.login.officeAccessDetail}</p>
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_40px_80px_-50px_rgba(0,0,0,0.7)]">
+              <div className="glass-panel p-6">
                 <p className="text-sm uppercase tracking-[0.3em] text-slate-400">{t.login.publicPortal}</p>
                 <p className="mt-3 text-lg text-slate-300">{t.login.publicPortalDetail}</p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link href="/" className="secondary-button text-sm">
+                    {t.login.publicOverview}
+                  </Link>
+                  <Link href="/register" className="secondary-button text-sm">
+                    {t.login.registerVip}
+                  </Link>
+                </div>
               </div>
             </section>
 
@@ -115,7 +123,7 @@ export default function LoginPage() {
                       onChange={(event) => setEmail(event.target.value)}
                       type="email"
                       placeholder={t.login.placeholderEmail}
-                      className="mt-3 w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-[#00D2FF] focus:ring-2 focus:ring-[#00D2FF]/20"
+                      className="field-input mt-3"
                     />
                   </label>
 
@@ -129,21 +137,18 @@ export default function LoginPage() {
                       onChange={(event) => setPassword(event.target.value)}
                       type="password"
                       placeholder={t.login.placeholderPassword}
-                      className="mt-3 w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-[#00D2FF] focus:ring-2 focus:ring-[#00D2FF]/20"
+                      className="field-input mt-3"
                     />
                   </label>
 
-                  <div className="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="inline-flex items-center gap-2">
-                      <input type="checkbox" className="h-4 w-4 rounded border-white/20 bg-slate-900 text-[#00D2FF] focus:ring-[#00D2FF]/80" />
-                      {t.login.rememberMe}
-                    </label>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <Link href="/" className="font-semibold text-[#00D2FF] hover:text-white">
-                        {t.login.forgotPassword}
-                      </Link>
+                  <div className="rounded-3xl border border-white/10 bg-slate-950/55 p-4 text-sm leading-7 text-slate-400">
+                    Use the email and password created for an admin or VIP account. New VIP users can be created from the registration page.
+                    <div className="mt-3 flex flex-wrap gap-3">
                       <Link href="/register" className="font-semibold text-[#00D2FF] hover:text-white">
                         {t.login.registerVip}
+                      </Link>
+                      <Link href="/" className="font-semibold text-slate-300 hover:text-white">
+                        Return to markets
                       </Link>
                     </div>
                   </div>
@@ -154,10 +159,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#00D2FF] px-6 py-4 text-base font-semibold text-slate-950 shadow-[0_20px_60px_-20px_#00D2FF] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="primary-button mt-2 w-full py-4 text-base"
                 >
                   <span>{loading ? t.login.signingIn : t.login.continue}</span>
-                  <Key className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </button>
 
                 <div className="rounded-3xl border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-300">
@@ -166,11 +171,11 @@ export default function LoginPage() {
                 </div>
 
                 <div className="grid gap-4 pt-2 sm:grid-cols-2">
-                  <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#00D2FF] hover:text-[#00D2FF]">
+                  <Link href="/dashboard" className="secondary-button text-sm">
                     <Building2 className="h-4 w-4" />
                     {t.login.adminPreview}
                   </Link>
-                  <Link href="/" className="inline-flex items-center justify-center gap-2 rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-[#00D2FF] hover:text-white">
+                  <Link href="/" className="secondary-button text-sm">
                     {t.login.publicOverview}
                   </Link>
                 </div>

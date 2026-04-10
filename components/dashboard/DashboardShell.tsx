@@ -7,7 +7,7 @@ import SignOutButton from "@/components/auth/SignOutButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import useDashboardRole from "@/hooks/useDashboardRole";
 import useTranslations from "@/hooks/useTranslations";
-import { CreditCard, Globe2, LayoutDashboard, Users } from "lucide-react";
+import { ArrowUpRight, CreditCard, FilePenLine, Globe2, Home, LayoutDashboard, Users } from "lucide-react";
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const t = useTranslations();
@@ -24,20 +24,26 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   };
 
   return (
+    // Shared dashboard shell keeps the admin area consistent while highlighting the active route.
     <div className="min-h-screen bg-[#08101E] text-white">
       <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-[#6a7eaa]/30 via-transparent to-transparent" />
       <div className="relative mx-auto flex min-h-screen max-w-[1600px] flex-col px-4 py-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-slate-950/40 px-6 py-5 shadow-xl shadow-slate-950/20 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
+        <header className="glass-panel-strong mb-8 flex flex-col gap-5 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/15 bg-[#00D2FF]/10 text-[#00D2FF] shadow-[0_20px_50px_-30px_#00D2FF]">
               <LayoutDashboard className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-slate-400">{t.dashboard.title}</p>
+              <p className="text-sm uppercase tracking-[0.35em] text-slate-400">{t.shell.badge}</p>
               <h1 className="text-2xl font-semibold text-white">{t.dashboard.title}</h1>
+              <p className="mt-2 text-sm text-slate-400">{t.shell.subtitle}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <Link href="/" className="secondary-button text-sm">
+              <Home className="h-4 w-4" />
+              {t.shell.publicSite}
+            </Link>
             <LanguageSwitcher />
             <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200 shadow-lg shadow-slate-950/20">
               {t.dashboard.roleLabel}{" "}
@@ -50,10 +56,15 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         </header>
 
         <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-          <aside className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-950/50 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur-xl">
+          <aside className="glass-panel-strong space-y-6 p-6 xl:sticky xl:top-6 xl:h-fit">
+            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t.shell.workspaceLabel}</p>
+              <p className="mt-3 text-lg font-semibold text-white">{t.shell.workspaceTitle}</p>
+              <p className="mt-2 text-sm text-slate-400">{t.shell.workspaceDescription}</p>
+            </div>
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t.dashboard.navigation}</p>
-              <nav className="space-y-2">
+              <nav className="grid gap-2">
                 <Link href="/dashboard/accounts" className={navItemClassName("/dashboard/accounts")}>
                   <CreditCard className="h-4 w-4 text-[#00D2FF]" />
                   {t.dashboard.navAccounts}
@@ -70,11 +81,21 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     {t.dashboard.navCountries}
                   </Link>
                 )}
+                {isAdmin && (
+                  <Link href="/dashboard/content" className={navItemClassName("/dashboard/content")}>
+                    <FilePenLine className="h-4 w-4 text-slate-300" />
+                    {t.dashboard.navContent}
+                  </Link>
+                )}
               </nav>
             </div>
+            <Link href="/" className="flex items-center justify-between rounded-[1.5rem] border border-white/10 bg-slate-950/60 px-4 py-4 text-sm text-slate-200 transition hover:border-[#00D2FF]/35 hover:text-white">
+              <span>{t.shell.openPublicDirectory}</span>
+              <ArrowUpRight className="h-4 w-4 text-[#00D2FF]" />
+            </Link>
           </aside>
 
-          <main className="space-y-6">
+          <main className="space-y-6 pb-8">
             {children}
           </main>
         </div>

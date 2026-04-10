@@ -4,15 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Core design tokens for the premium glassmorphism UI direction. */
 :root {
-  --background: #b1bff7;
-  --foreground: #917e7e;
+  --background: #07111f;
+  --background-soft: #0c1830;
+  --foreground: #ecf6ff;
+  --muted: #94a9c6;
+  --panel: rgba(255, 255, 255, 0.08);
+  --panel-strong: rgba(15, 23, 37, 0.72);
+  --stroke: rgba(255, 255, 255, 0.12);
+  --accent: #00d2ff;
+  --accent-soft: #6a7eaa;
 }
 
-body {
-  background-color: #6a7eaa; /* تثبيت اللون يدوياً لضمان عدم ظهوره بالأبيض */
-  color: white;
-}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -22,13 +26,186 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #07111f;
+    --foreground: #ecf6ff;
   }
 }
 
+/* Global body styling keeps both dashboard and public routes on the same visual system. */
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(0, 210, 255, 0.18), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(106, 126, 170, 0.26), transparent 30%),
+    linear-gradient(180deg, #08101e 0%, #07111f 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Reusable glass containers avoid repeating long utility chains in every screen. */
+.glass-panel {
+  border: 1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 28px 80px -44px rgba(0, 210, 255, 0.35);
+  backdrop-filter: blur(24px);
+  border-radius: 2rem;
+}
+
+.glass-panel-strong {
+  border: 1px solid var(--stroke);
+  background: var(--panel-strong);
+  box-shadow: 0 24px 80px -40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(24px);
+  border-radius: 2rem;
+}
+
+.metric-chip {
+  border: 1px solid var(--stroke);
+  background: rgba(9, 17, 31, 0.62);
+  border-radius: 9999px;
+  padding: 0.8rem 1rem;
+}
+
+.dashboard-stat {
+  border: 1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  border-radius: 1.5rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 18px 50px -34px rgba(0, 0, 0, 0.5);
+}
+
+.premium-panel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    radial-gradient(circle at top right, rgba(0, 210, 255, 0.12), transparent 35%);
+  box-shadow: 0 34px 110px -58px rgba(0, 210, 255, 0.42);
+  backdrop-filter: blur(28px);
+  border-radius: 2rem;
+}
+
+.editorial-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .editorial-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  }
+}
+
+.accent-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(0, 210, 255, 0.24);
+  background: rgba(0, 210, 255, 0.1);
+  color: #c7f8ff;
+  border-radius: 9999px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.surface-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #8ea4c3;
+}
+
+.subtle-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
+}
+
+.field-input,
+.field-select {
+  width: 100%;
+  border: 1px solid var(--stroke);
+  background: rgba(2, 8, 23, 0.68);
+  color: var(--foreground);
+  border-radius: 1.5rem;
+  padding: 0.9rem 1rem;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.field-input:focus,
+.field-select:focus {
+  border-color: rgba(0, 210, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(0, 210, 255, 0.14);
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #051320;
+  box-shadow: 0 24px 60px -24px rgba(0, 210, 255, 0.7);
+}
+
+.secondary-button {
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--foreground);
+}
+
+.danger-button {
+  border: 1px solid rgba(251, 113, 133, 0.24);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fecdd3;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.empty-state {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 37, 0.44);
+  border-radius: 2rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 0.6px, transparent 0.6px);
+  background-size: 18px 18px;
+  opacity: 0.22;
 }

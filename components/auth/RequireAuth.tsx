@@ -9,7 +9,7 @@ interface RequireAuthProps {
   children: ReactNode;
 }
 
-interface OfficeRecord {
+interface VipUserRecord {
   id: string;
   userId: string | null;
   email: string;
@@ -35,16 +35,16 @@ export default function RequireAuth({ children }: RequireAuthProps) {
       }
 
       try {
-        const response = await fetch("/api/offices");
+        const response = await fetch("/api/vips");
 
         if (response.ok) {
-          const offices = (await response.json()) as OfficeRecord[];
+          const vipUsers = (await response.json()) as VipUserRecord[];
           const currentUser = data.session.user;
-          const matchedOffice = offices.find(
-            office => office.userId === currentUser.id || office.email.toLowerCase() === (currentUser.email || "").toLowerCase()
+          const matchedVipUser = vipUsers.find(
+            vipUser => vipUser.userId === currentUser.id || vipUser.email.toLowerCase() === (currentUser.email || "").toLowerCase()
           );
 
-          if (matchedOffice && !matchedOffice.isActive) {
+          if (matchedVipUser && !matchedVipUser.isActive) {
             await supabase.auth.signOut();
             router.replace("/");
             return;

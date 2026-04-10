@@ -9,28 +9,26 @@ export async function GET() {
       return NextResponse.json({ error: "Database connection not available" }, { status: 500 });
     }
 
-    const { data: offices, error } = await supabase
-      .from("offices")
+    const { data: vipUsers, error } = await supabase
+      .from("vip_users")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching offices:", error);
+      console.error("Error fetching VIP users:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const transformedOffices = offices?.map(office => ({
-      id: office.id,
-      userId: office.user_id || null,
-      name: office.name,
-      email: office.email,
-      phone: office.phone,
-      isActive: office.is_active,
-    })) || [];
-
-    return NextResponse.json(transformedOffices);
+    return NextResponse.json((vipUsers || []).map(vipUser => ({
+      id: vipUser.id,
+      userId: vipUser.user_id || null,
+      name: vipUser.name,
+      email: vipUser.email,
+      phone: vipUser.phone,
+      isActive: vipUser.is_active,
+    })));
   } catch (error) {
-    console.error("Error in GET /api/offices:", error);
+    console.error("Error in GET /api/vips:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -51,10 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!name || !email || !phone) {
-      return NextResponse.json(
-        { error: "Missing required fields: name, email, phone" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required fields: name, email, phone" }, { status: 400 });
     }
 
     let resolvedUserId = userId;
@@ -85,14 +80,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from("offices")
-      .insert({
-        user_id: resolvedUserId,
-        name,
-        email,
-        phone,
-        is_active: isActive,
-      })
+      .from("vip_users")
+      .insert({ user_id: resolvedUserId, name, email, phone, is_active: isActive })
       .select()
       .single();
 
@@ -100,13 +89,14 @@ export async function POST(request: NextRequest) {
       if (hasAdminAuth && resolvedUserId && supabaseAdmin) {
         await supabaseAdmin.auth.admin.deleteUser(resolvedUserId);
       }
-      console.error("Error creating office:", error);
+
+      console.error("Error creating VIP user:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error("Error in POST /api/offices:", error);
+    console.error("Error in POST /api/vips:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

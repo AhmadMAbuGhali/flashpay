@@ -39,10 +39,11 @@ Apply the database schema in [supabase-schema.sql](supabase-schema.sql) to your 
 
 ## Notes
 
-- VIP people are stored in the `offices` table.
+- VIP people are stored in the `vip_users` table.
 - Public users only see non-VIP active accounts.
 - VIP users can log in and view all accounts.
-- Admin-only dashboard pages include countries and VIP people.
+- Admin-only dashboard pages include countries, VIP people, and UI content editing.
+- UI copy can be edited per language from `/dashboard/content`.
 
 ## Learn More
 

@@ -5,6 +5,7 @@ import RequireAuth from "@/components/auth/RequireAuth";
 import useDashboardRole from "@/hooks/useDashboardRole";
 import useTranslations from "@/hooks/useTranslations";
 import { supabase } from "@/lib/supabaseClient";
+import { CreditCard, Filter, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 interface Account {
   id: string;
@@ -108,12 +109,12 @@ export default function DashboardAccountsPage() {
   };
 
   useEffect(() => {
-    if (!form.country) return;
+    if (!form.country) {
+      return;
+    }
 
     const selected = countries.find(country => country.name === form.country);
-    if (selected?.currency) {
-      setForm(prev => ({ ...prev, currency: selected.currency }));
-    }
+    setForm(prev => ({ ...prev, currency: selected?.currency || "" }));
   }, [form.country, countries]);
 
   const handleFormChange = (field: keyof AccountForm, value: string) => {
@@ -267,9 +268,18 @@ export default function DashboardAccountsPage() {
     return matchesCountry && matchesSearch;
   });
 
+  const accountSummary = {
+    total: visibleAccounts.length,
+    active: visibleAccounts.filter(account => account.isActive).length,
+    vip: visibleAccounts.filter(account => account.isVip).length,
+    countries: new Set(visibleAccounts.map(account => account.country)).size,
+  };
+  const formCountryDetails = countries.find(country => country.name === form.country) || null;
+
   return (
     <RequireAuth>
       <div className="space-y-6">
+        {/* Summary chips surface the current filtered dataset before the admin scrolls into the table. */}
         <div className="rounded-[2rem] border border-white/10 bg-[#0e1728]/80 p-6 text-slate-200 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -288,9 +298,10 @@ export default function DashboardAccountsPage() {
                   setForm(initialAccountForm);
                 }
               }}
-              className="rounded-full border border-white/10 bg-[#00D2FF]/10 px-5 py-3 text-sm font-semibold text-[#00D2FF] transition hover:bg-[#00D2FF]/15 disabled:cursor-not-allowed disabled:opacity-50"
+              className="secondary-button disabled:cursor-not-allowed"
             >
-              {!isAdmin ? t.accounts.vipViewOnly : isCreating ? t.common.cancel : `+ ${t.accounts.addAccount}`}
+              {!isAdmin ? <ShieldCheck className="h-4 w-4" /> : isCreating ? null : <Plus className="h-4 w-4" />}
+              {!isAdmin ? t.accounts.vipViewOnly : isCreating ? t.common.cancel : t.accounts.addAccount}
             </button>
           </div>
           {isVip && (
@@ -298,107 +309,215 @@ export default function DashboardAccountsPage() {
               {t.accounts.vipReadonlyNote}
             </p>
           )}
+          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4 text-sm">
+            <div className="dashboard-stat">
+              <p className="text-slate-400">{t.accounts.visibleAccountsLabel}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{accountSummary.total}</p>
+            </div>
+            <div className="dashboard-stat">
+              <p className="text-slate-400">{t.common.active}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{accountSummary.active}</p>
+            </div>
+            <div className="dashboard-stat">
+              <p className="text-slate-400">{t.accounts.vipEntriesLabel}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{accountSummary.vip}</p>
+            </div>
+            <div className="dashboard-stat">
+              <p className="text-slate-400">{t.accounts.countriesLabel}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{accountSummary.countries}</p>
+            </div>
+          </div>
         </div>
 
         {isAdmin && isCreating && (
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
-            <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
-              <label className="space-y-2">
-                <span className="text-sm text-slate-400">{t.accounts.accountTextLabel}</span>
-                <input
-                  className="w-full rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
-                  value={form.accountText}
-                  onChange={event => handleFormChange("accountText", event.target.value)}
-                  placeholder={t.accounts.accountTextPlaceholder}
-                  required
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm text-slate-400">{t.accounts.countryLabel}</span>
-                <select
-                  className="w-full rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
-                  value={form.country}
-                  onChange={event => handleFormChange("country", event.target.value)}
-                  required
-                >
-                  <option value="">{t.accounts.selectCountry}</option>
-                  {countries.map(country => (
-                    <option key={country.id} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm text-slate-400">{t.accounts.currencyLabel}</span>
-                <input
-                  className="w-full rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-[#00D2FF]/60"
-                  value={form.currency}
-                  onChange={event => handleFormChange("currency", event.target.value)}
-                  placeholder={t.accounts.currencyPlaceholder}
-                  required
-                  readOnly
-                />
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={form.isActive}
-                  onChange={event => setForm(prev => ({ ...prev, isActive: event.target.checked }))}
-                  className="h-4 w-4 rounded border-white/10 bg-slate-950/80"
-                />
-                <span className="text-sm text-slate-400">{t.accounts.activeAccount}</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={form.isVip}
-                  onChange={event => setForm(prev => ({ ...prev, isVip: event.target.checked }))}
-                  className="h-4 w-4 rounded border-white/10 bg-slate-950/80"
-                />
-                <span className="text-sm text-slate-400">{t.accounts.vipAccount}</span>
-              </label>
-              {submitError && (
-                <div className="lg:col-span-2 rounded-3xl bg-rose-500/10 p-4 text-sm text-rose-300">
-                  {submitError}
+          <div className="premium-panel p-6 shadow-xl shadow-slate-950/10">
+            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <p className="surface-label">{isEditing ? t.accounts.formTitleEdit : t.accounts.formTitleCreate}</p>
+                  <h3 className="mt-2 text-2xl font-semibold text-white">{isEditing ? t.accounts.updateAccount : t.accounts.addAccount}</h3>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+                    {isEditing ? t.accounts.formDescriptionEdit : t.accounts.formDescriptionCreate}
+                  </p>
                 </div>
-              )}
-              <div className="lg:col-span-2">
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <label className="space-y-2 lg:col-span-2">
+                    <span className="text-sm text-slate-400">{t.accounts.accountTextLabel}</span>
+                    <input
+                      className="field-input"
+                      value={form.accountText}
+                      onChange={event => handleFormChange("accountText", event.target.value)}
+                      placeholder={t.accounts.accountTextPlaceholder}
+                      required
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-sm text-slate-400">{t.accounts.countryLabel}</span>
+                    <select
+                      className="field-select"
+                      value={form.country}
+                      onChange={event => handleFormChange("country", event.target.value)}
+                      required
+                    >
+                      <option value="">{t.accounts.selectCountry}</option>
+                      {countries.map(country => (
+                        <option key={country.id} value={country.name}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-sm text-slate-400">{t.accounts.currencyLabel}</span>
+                    <input
+                      className="field-input"
+                      value={form.currency}
+                      onChange={event => handleFormChange("currency", event.target.value)}
+                      placeholder={t.accounts.currencyPlaceholder}
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-[1.4rem] border border-white/10 bg-slate-950/55 px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={form.isActive}
+                      onChange={event => setForm(prev => ({ ...prev, isActive: event.target.checked }))}
+                      className="h-4 w-4 rounded border-white/10 bg-slate-950/80"
+                    />
+                    <span className="text-sm text-slate-300">{t.accounts.activeAccount}</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-[1.4rem] border border-white/10 bg-slate-950/55 px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={form.isVip}
+                      onChange={event => setForm(prev => ({ ...prev, isVip: event.target.checked }))}
+                      className="h-4 w-4 rounded border-white/10 bg-slate-950/80"
+                    />
+                    <span className="text-sm text-slate-300">{t.accounts.vipAccount}</span>
+                  </label>
+                </div>
+
+                {submitError && (
+                  <div className="rounded-3xl bg-rose-500/10 p-4 text-sm text-rose-300">
+                    {submitError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex w-full items-center justify-center rounded-3xl bg-[#00D2FF] px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-[#00D2FF]/90 disabled:opacity-50"
+                  className="primary-button w-full"
                 >
                   {saving ? (isEditing ? t.accounts.updatingAccount : t.accounts.addingAccount) : (isEditing ? t.accounts.updateAccount : t.accounts.addAccount)}
                 </button>
+              </form>
+
+              <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/60 p-5">
+                <p className="surface-label">{t.accounts.previewTitle}</p>
+                {formCountryDetails ? (
+                  <div className="mt-4 space-y-4 text-slate-300">
+                    <div className="dashboard-stat">
+                      <p className="text-sm text-slate-400">{t.accounts.countryLabel}</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{formCountryDetails.name}</p>
+                    </div>
+                    <div className="dashboard-stat">
+                      <p className="text-sm text-slate-400">{t.accounts.currencyLabel}</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{formCountryDetails.currency}</p>
+                    </div>
+                    <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4 text-sm leading-7 text-slate-300">
+                      {form.isVip ? t.accounts.previewVip : t.accounts.previewPublic}
+                    </div>
+                    <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-sm text-slate-400">{t.accounts.accountTextLabel}</p>
+                      <p className="mt-2 text-base font-medium text-white break-words">
+                        {form.accountText || "..."}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4 text-sm leading-7 text-slate-400">
+                    {t.accounts.previewEmpty}
+                  </div>
+                )}
               </div>
-            </form>
+            </div>
           </div>
         )}
 
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-xl shadow-slate-950/10 backdrop-blur-xl">
-          <div className="mb-4 flex items-center gap-4">
-            <label className="text-sm text-slate-400">{t.accounts.filterByCountry}</label>
-            <select
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-2 text-white outline-none focus:border-[#00D2FF]/60"
-            >
-              <option value="">{t.accounts.allCountries}</option>
-              {countries.map(country => (
-                <option key={country.id} value={country.name}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-            <input
-              value={searchTerm}
-              onChange={event => setSearchTerm(event.target.value)}
-              placeholder={t.accounts.searchPlaceholder}
-              className="min-w-[260px] rounded-3xl border border-white/10 bg-slate-950/80 px-4 py-2 text-white outline-none focus:border-[#00D2FF]/60"
-            />
+          {/* Filters stay visible across desktop and mobile and reduce the need for manual scanning. */}
+          <div className="mb-6 grid gap-4 xl:grid-cols-[220px_1fr]">
+            <label className="space-y-2">
+              <span className="flex items-center gap-2 text-sm text-slate-400"><Filter className="h-4 w-4 text-[#00D2FF]" />{t.accounts.filterByCountry}</span>
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="field-select"
+              >
+                <option value="">{t.accounts.allCountries}</option>
+                {countries.map(country => (
+                  <option key={country.id} value={country.name}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-2">
+              <span className="flex items-center gap-2 text-sm text-slate-400"><Search className="h-4 w-4 text-[#00D2FF]" />{t.accounts.searchLabel}</span>
+              <input
+                value={searchTerm}
+                onChange={event => setSearchTerm(event.target.value)}
+                placeholder={t.accounts.searchPlaceholder}
+                className="field-input"
+              />
+            </label>
           </div>
 
+          {visibleAccounts.length === 0 && (
+            <div className="empty-state mb-4">
+              <CreditCard className="mx-auto h-10 w-10 text-[#00D2FF]" />
+              <h3 className="mt-4 text-xl font-semibold text-white">{t.accounts.emptyTitle}</h3>
+              <p className="mt-2 text-sm text-slate-400">{t.accounts.emptyDescription}</p>
+            </div>
+          )}
+
+          <div className="grid gap-4 md:hidden">
+            {visibleAccounts.map(account => (
+              <div key={`mobile-${account.id}`} className="glass-panel-strong p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-lg font-semibold text-white">{account.accountText}</p>
+                    <p className="mt-2 text-sm text-slate-400">{account.country} · {account.currency}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${account.isVip ? "bg-purple-500/15 text-purple-300" : "bg-gray-500/15 text-gray-300"}`}>
+                    {account.isVip ? "VIP" : t.accounts.publicLabel}
+                  </span>
+                </div>
+                <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                  <span>{account.isActive ? t.common.active : t.common.inactive}</span>
+                  <span>{isAdmin ? t.common.edit : t.common.viewOnly}</span>
+                </div>
+                {isAdmin && (
+                  <div className="mt-4 flex gap-2">
+                    <button onClick={() => handleEditAccount(account)} className="secondary-button flex-1 text-sm">
+                      <Pencil className="h-4 w-4" />
+                      {t.common.edit}
+                    </button>
+                    <button onClick={() => handleDeleteAccount(account.id)} className="danger-button flex-1 text-sm">
+                      <Trash2 className="h-4 w-4" />
+                      {t.common.delete}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full border-collapse text-left text-sm text-slate-200">
             <thead className="bg-slate-950/80 text-slate-400">
               <tr>
@@ -450,6 +569,7 @@ export default function DashboardAccountsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </RequireAuth>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { slugifyCountryName } from "@/lib/countryMetadata";
 import { supabase } from "@/lib/supabaseClient";
 import { requireAdminAccess } from "@/lib/requireAdminAccess";
 
@@ -16,15 +17,34 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, currency } = body;
+    const { name, currency, flagEmoji = null, flagIconUrl = null } = body;
 
-    if (!name || !currency) {
-      return NextResponse.json({ error: "Name and currency are required" }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const normalizedCurrency = typeof currency === "string" ? currency.trim().toUpperCase() : undefined;
+
+    const updateData: {
+      name: string;
+      slug: string;
+      flag_emoji: string | null;
+      flag_icon_url: string | null;
+      currency?: string;
+    } = {
+      name,
+      slug: slugifyCountryName(name),
+      flag_emoji: flagEmoji,
+      flag_icon_url: flagIconUrl,
+    };
+
+    if (normalizedCurrency !== undefined) {
+      updateData.currency = normalizedCurrency;
     }
 
     const { data, error } = await supabase
       .from("countries")
-      .update({ name, currency })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();

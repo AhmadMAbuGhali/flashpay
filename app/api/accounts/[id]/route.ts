@@ -61,9 +61,24 @@ export async function PUT(
     const body = await request.json();
     const { accountText, country, currency, isActive, isVip } = body;
 
+    let matchedCountryId: string | null | undefined;
+    let matchedCountryName: string | undefined;
+
+    if (country !== undefined) {
+      const { data: matchedCountry } = await supabase
+        .from("countries")
+        .select("id, name")
+        .ilike("name", country)
+        .maybeSingle();
+
+      matchedCountryId = matchedCountry?.id || null;
+      matchedCountryName = matchedCountry?.name || country;
+    }
+
     const updateData: any = {};
     if (accountText !== undefined) updateData.account_text = accountText;
-    if (country !== undefined) updateData.country = country;
+    if (country !== undefined) updateData.country = matchedCountryName;
+    if (country !== undefined) updateData.country_id = matchedCountryId;
     if (currency !== undefined) updateData.currency = currency;
     if (isActive !== undefined) updateData.is_active = isActive;
     if (isVip !== undefined) updateData.is_vip = isVip;

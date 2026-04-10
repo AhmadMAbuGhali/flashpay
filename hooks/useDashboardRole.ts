@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 type DashboardRole = "admin" | "vip";
 
-interface OfficeRecord {
+interface VipUserRecord {
   id: string;
   name: string;
   userId: string | null;
@@ -38,7 +38,7 @@ export default function useDashboardRole() {
       const metadataName = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
 
       try {
-        const response = await fetch("/api/offices");
+        const response = await fetch("/api/vips");
 
         if (!response.ok) {
           setUserName(metadataName);
@@ -46,14 +46,14 @@ export default function useDashboardRole() {
           return;
         }
 
-        const offices = (await response.json()) as OfficeRecord[];
-        const matchedOffice = offices.find(
-          office => office.userId === user.id || office.email.toLowerCase() === (user.email || "").toLowerCase()
+        const vipUsers = (await response.json()) as VipUserRecord[];
+        const matchedVipUser = vipUsers.find(
+          vipUser => vipUser.userId === user.id || vipUser.email.toLowerCase() === (user.email || "").toLowerCase()
         );
 
-        setRole(matchedOffice ? "vip" : "admin");
-        setUserName(matchedOffice?.name || metadataName || user.email || null);
-        setVipActive(matchedOffice?.isActive ?? true);
+        setRole(matchedVipUser ? "vip" : "admin");
+        setUserName(matchedVipUser?.name || metadataName || user.email || null);
+        setVipActive(matchedVipUser?.isActive ?? true);
       } catch {
         setRole("admin");
         setUserName(metadataName || user.email || null);
